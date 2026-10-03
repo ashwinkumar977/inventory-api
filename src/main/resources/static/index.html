@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h2 class="text-primary fw-bold mb-0">📦 Inventory Dashboard Pro</h2>
+        <button class="btn btn-outline-primary btn-sm" onclick="loadAll()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    </div>
+
+    <!-- 1. STATS / SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase fs-7 opacity-75">Total Categories</h6>
+                    <h3 class="fw-bold mb-0" id="statCategories">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase fs-7 opacity-75">Total Products</h6>
+                    <h3 class="fw-bold mb-0" id="statProducts">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase fs-7 opacity-75">Inventory Value</h6>
+                    <h3 class="fw-bold mb-0" id="statTotalValue">₹0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase fs-7 opacity-75">Low Stock (< 5)</h6>
+                    <h3 class="fw-bold mb-0" id="statLowStock">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- CATEGORY MANAGEMENT SECTION -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white fw-bold">Add Category</div>
+                <div class="card-body">
+                    <form id="categoryForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Category Name</label>
+                            <input type="text" id="catName" class="form-control" placeholder="e.g. Electronics" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Description</label>
+                            <input type="text" id="catDesc" class="form-control" placeholder="Optional description">
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="addCategory()">Save Category</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Categories List -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white fw-bold">Categories</div>
+                <ul class="list-group list-group-flush" id="categoryList">
+                    <!-- Dynamic Items -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- PRODUCT MANAGEMENT SECTION -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-success text-white fw-bold">Add Product</div>
+                <div class="card-body">
+                    <form id="productForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Product Name</label>
+                                <input type="text" id="prodName" class="form-control" placeholder="e.g. Laptop" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Category</label>
+                                <select id="prodCategory" class="form-select" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Price (₹)</label>
+                                <input type="number" step="0.01" id="prodPrice" class="form-control" placeholder="45000" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-semibold">Stock Quantity</label>
+                                <input type="number" id="prodStock" class="form-control" placeholder="10" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success w-100" onclick="addProduct()">Save Product</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Table with Search -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">All Products</span>
+                    <!-- SEARCH BAR -->
+                    <input type="text" id="searchInput" class="form-control form-control-sm w-50" placeholder="Search product name..." onkeyup="filterProducts()">
+                </div>
+                <div class="card-body p-0 table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Category</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                        <!-- Dynamic Products -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold">Edit Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editProdId">
+                <div class="mb-3">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="editProdName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Price (₹)</label>
+                    <input type="number" step="0.01" id="editProdPrice" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Stock Quantity</label>
+                    <input type="number" id="editProdStock" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="updateProduct()">Update Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const API_BASE = "http://localhost:8080/api";
+    let globalProducts = [];
+    let editModal;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+        loadAll();
+    });
+
+    function loadAll() {
+        loadCategories();
+        loadProducts();
+    }
+
+    // 1. Fetch Categories
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API_BASE}/categories`);
+            const categories = await res.json();
+
+            document.getElementById("statCategories").innerText = categories.length;
+
+            const list = document.getElementById("categoryList");
+            list.innerHTML = categories.length === 0
+                ? `<li class="list-group-item text-muted text-center">No categories added</li>`
+                : categories.map(c => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="d-block">${c.name}</strong>
+                            <small class="text-muted">${c.description || ''}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id})"><i class="bi bi-trash"></i></button>
+                    </li>
+                `).join('');
+
+            const dropdown = document.getElementById("prodCategory");
+            dropdown.innerHTML = `<option value="">Select Category</option>` +
+                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        } catch (e) { console.error("Error loading categories", e); }
+    }
+
+    // 2. Fetch Products
+    async function loadProducts() {
+        try {
+            const res = await fetch(`${API_BASE}/products`);
+            globalProducts = await res.json();
+
+            updateStats(globalProducts);
+            renderProductTable(globalProducts);
+        } catch (e) { console.error("Error loading products", e); }
+    }
+
+    // Update Stats Cards
+    function updateStats(products) {
+        document.getElementById("statProducts").innerText = products.length;
+
+        const totalVal = products.reduce((acc, p) => acc + (p.price * p.stockQuantity), 0);
+        document.getElementById("statTotalValue").innerText = `₹${totalVal.toLocaleString()}`;
+
+        const lowStockCount = products.filter(p => p.stockQuantity < 5).length;
+        document.getElementById("statLowStock").innerText = lowStockStock = lowStockCount;
+    }
+
+    // Render Table
+    function renderProductTable(products) {
+        const tbody = document.getElementById("productTableBody");
+        if (products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">No products found</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = products.map(p => `
+            <tr>
+                <td>${p.id}</td>
+                <td><strong>${p.name}</strong></td>
+                <td>₹${p.price}</td>
+                <td>
+                    <span class="badge ${p.stockQuantity < 5 ? 'bg-danger' : 'bg-secondary'}">
+                        ${p.stockQuantity}
+                    </span>
+                </td>
+                <td><span class="badge bg-info text-dark">${p.categoryName || 'Cat ID: ' + p.categoryId}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-warning me-1" onclick="openEditModal(${p.id})">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Search Filter
+    function filterProducts() {
+        const query = document.getElementById("searchInput").value.toLowerCase();
+        const filtered = globalProducts.filter(p => p.name.toLowerCase().includes(query));
+        renderProductTable(filtered);
+    }
+
+    // Add Category
+    async function addCategory() {
+        const name = document.getElementById("catName").value;
+        const description = document.getElementById("catDesc").value;
+
+        if (!name) return alert("Category Name is required!");
+
+        await fetch(`${API_BASE}/categories`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description })
+        });
+
+        document.getElementById("categoryForm").reset();
+        loadAll();
+    }
+
+    // Delete Category
+    async function deleteCategory(id) {
+        if (confirm("Delete this category?")) {
+            await fetch(`${API_BASE}/categories/${id}`, { method: "DELETE" });
+            loadAll();
+        }
+    }
+
+    // Add Product
+    async function addProduct() {
+        const name = document.getElementById("prodName").value;
+        const price = parseFloat(document.getElementById("prodPrice").value);
+        const stockQuantity = parseInt(document.getElementById("prodStock").value);
+        const categoryId = parseInt(document.getElementById("prodCategory").value);
+
+        if (!name || !price || isNaN(stockQuantity) || !categoryId) {
+            return alert("Please fill all details correctly!");
+        }
+
+        await fetch(`${API_BASE}/products`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, price, stockQuantity, categoryId })
+        });
+
+        document.getElementById("productForm").reset();
+        loadProducts();
+    }
+
+    // Open Edit Modal
+    function openEditModal(id) {
+        const prod = globalProducts.find(p => p.id === id);
+        if (!prod) return;
+
+        document.getElementById("editProdId").value = prod.id;
+        document.getElementById("editProdName").value = prod.name;
+        document.getElementById("editProdPrice").value = prod.price;
+        document.getElementById("editProdStock").value = prod.stockQuantity;
+
+        editModal.show();
+    }
+
+    // Update Product (PUT Request)
+    async function updateProduct() {
+        const id = document.getElementById("editProdId").value;
+        const name = document.getElementById("editProdName").value;
+        const price = parseFloat(document.getElementById("editProdPrice").value);
+        const stockQuantity = parseInt(document.getElementById("editProdStock").value);
+
+        await fetch(`${API_BASE}/products/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, price, stockQuantity })
+        });
+
+        editModal.hide();
+        loadProducts();
+    }
+
+    // Delete Product
+    async function deleteProduct(id) {
+        if (confirm("Are you sure you want to delete this product?")) {
+            await fetch(`${API_BASE}/products/${id}`, { method: "DELETE" });
+            loadProducts();
+        }
+    }
+</script>
+
+</body>
+</html>
