@@ -10,6 +10,33 @@
 </head>
 <body class="bg-light">
 
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="authTitle">Login to Inventory</h5>
+            </div>
+            <div class="modal-body">
+                <form id="authForm">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="authUsername" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="authPassword" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="authSubmitBtn">Login</button>
+                </form>
+                <div class="mt-3 text-center">
+                    <a href="#" id="toggleAuthMode">Don't have an account? Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container py-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -179,6 +206,97 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+
+    let isLoginMode = true;
+
+    // 1. Page load hone par check karein ki token exist karta hai ya nahi
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("jwt_token");
+        if (!token) {
+            showLoginModal();
+        } else {
+            loadDashboardData(); // Aapka existing data loading function
+        }
+    });
+
+    // 2. Login Modal Show Function
+    function showLoginModal() {
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+    }
+
+    // 3. Toggle between Login & Register
+    document.getElementById("toggleAuthMode").addEventListener("click", (e) => {
+        e.preventDefault();
+        isLoginMode = !isLoginMode;
+        document.getElementById("authTitle").innerText = isLoginMode ? "Login to Inventory" : "Register New Account";
+        document.getElementById("authSubmitBtn").innerText = isLoginMode ? "Login" : "Register";
+        e.target.innerText = isLoginMode ? "Don't have an account? Register" : "Already have an account? Login";
+    });
+
+    // 4. Submit Form (Login / Register)
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const username = document.getElementById("authUsername").value;
+        const password = document.getElementById("authPassword").value;
+
+        const endpoint = isLoginMode ? "/api/auth/login" : "/api/auth/register";
+        const payload = isLoginMode ? { username, password } : { username, password, role: "ROLE_USER" };
+
+        try {
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                alert("Authentication failed! Check credentials.");
+                return;
+            }
+
+            if (isLoginMode) {
+                const data = await response.json();
+                // Store JWT Token in localStorage
+                localStorage.setItem("jwt_token", data.token);
+                alert("Login Successful!");
+                location.reload(); // Refresh page to load data
+            } else {
+                alert("Registration Successful! Please login.");
+                document.getElementById("toggleAuthMode").click();
+            }
+        } catch (err) {
+            console.error("Auth error:", err);
+        }
+    });
+
+    // 5. Protected Fetch Function (Har API call me Bearer token auto-attach karega)
+    async function fetchProtectedAPI(url, options = {}) {
+        const token = localStorage.getItem("jwt_token");
+
+        options.headers = {
+            ...options.headers,
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        };
+
+        const response = await fetch(url, options);
+
+        // Agar token invalid/expired ho jaye to 401 par direct logout
+        if (response.status === 401) {
+            alert("Session expired! Please login again.");
+            logout();
+            return null;
+        }
+
+        return response.json();
+    }
+
+    // 6. Logout Function
+    function logout() {
+        localStorage.removeItem("jwt_token");
+        location.reload();
+    }
     const API_BASE = "http://localhost:8080/api";
     let globalProducts = [];
     let editModal;
